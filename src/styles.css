@@ -25,7 +25,7 @@
     --space-4: 1rem;
     --space-6: 1.5rem;
     --radius-md: 0.75rem;
-    --bg: hsl(210 50% 98%);
+    --bg: hsl(0, 0%, 100%);
     --panel: hsl(0 0% 100%);
     --text: hsl(215 30% 15%);
     --accent: hsl(214 85% 47%);
@@ -35,7 +35,7 @@
 @layer base {
   body {
     font-family: var(--font-sans);
-    background: radial-gradient(circle at top, hsl(206 100% 94%), var(--bg));
+    background: radial-gradient(circle at center, hsl(64, 92%, 90%), var(--bg));
     color: var(--text);
     min-block-size: 100svh;
   }
@@ -46,27 +46,26 @@
     min-block-size: 100svh;
     display: grid;
     place-items: center;
-    padding: var(--space-6);
   }
 
-  .panel {
-    inline-size: min(100%, 36rem);
+  .board {
     background: var(--panel);
     border-radius: var(--radius-md);
-    padding: clamp(1rem, 2vw, 1.5rem);
+    inline-size: min(100%, 36rem);
+    aspect-ratio: 1;
+    padding: clamp(0.5rem, 1.5vw, 1rem);
     box-shadow: 0 10px 30px hsl(215 30% 15% / 0.08);
     display: grid;
-    gap: var(--space-4);
+    gap: 1px;
+    overflow: hidden;
   }
 
   button {
-    inline-size: fit-content;
+    inline-size: 100%;
+    block-size: 100%;
+    color: black;
+    background-color: white;
     border: none;
-    border-radius: 999px;
-    background: var(--accent);
-    color: white;
-    padding: var(--space-3) var(--space-6);
-    font: inherit;
     cursor: pointer;
   }
 

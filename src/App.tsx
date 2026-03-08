@@ -1,17 +1,23 @@
-import { useState } from 'react'
+const SIZE = 15
 
 export function App() {
-  const [count, setCount] = useState(0)
+    const cells = Array.from({length: SIZE * SIZE})
 
-  return (
-    <main className="app-shell">
-      <section className="panel" aria-live="polite">
-        <h1>Vite + React + TypeScript</h1>
-        <p>Starter project is ready. Edit src/App.tsx to begin.</p>
-        <button type="button" onClick={() => setCount((value) => value + 1)}>
-          Count: {count}
-        </button>
-      </section>
-    </main>
-  )
+    return (
+        <main className="app-shell">
+            <div
+                className="board"
+                style={{
+                    gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${SIZE}, minmax(0, 1fr))`,
+                }}
+            >
+                {cells.map((_, i) => (
+                    <button key={i} type="button" aria-label={`Cell ${Math.floor(i / SIZE) + 1}-${(i % SIZE) + 1}`}>
+                        M
+                    </button>
+                ))}
+            </div>
+        </main>
+    )
 }
