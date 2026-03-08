@@ -58,10 +58,12 @@ When making changes, optimize for:
 
 ## Quality Gates
 Before finishing significant changes, run:
-- typecheck
-- lint
-- tests (if present)
-- production build
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (only when a test script exists)
+- `npm run build`
+
+Run in that order unless a task explicitly requires a different sequence.
 
 If a gate cannot be run, state exactly why.
 
