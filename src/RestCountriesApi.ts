@@ -13,6 +13,8 @@ type CountryElement = {
   cca2: string;
 };
 
+const MAX_COUNTRY_NAME_LENGTH = 25;
+
 export namespace RestCountriesApi {
   const URL = "https://restcountries.com/v3.1/all?fields=name,cca2";
 
@@ -26,7 +28,10 @@ export namespace RestCountriesApi {
   }
 
   function transformData(acc: Record<string, string>, item: CountryElement) {
-    acc[item["cca2"]] = item["name"]["common"];
+    // Keep only countries with shorter names
+    if (item["name"]["common"].length <= MAX_COUNTRY_NAME_LENGTH) {
+      acc[item["cca2"]] = item["name"]["common"];
+    }
 
     return acc;
   }
