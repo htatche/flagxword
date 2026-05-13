@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
+import { Generate } from './Crossword'
 
 type CellLetter = string | null;
 
@@ -28,6 +29,9 @@ export function Board({ size }: BoardProps) {
             letter: letter,
         }))
     );
+
+    let result = Generate();
+    console.table(result);
 
     return (
         <DragDropProvider

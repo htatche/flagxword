@@ -6,12 +6,7 @@
  *  fills in missing squares with black
  */
 
-type CountryElement = {
-  name: {
-    common: string;
-  };
-  cca2: string;
-};
+import type { CountryElement } from './Types';
 
 const MAX_COUNTRY_NAME_LENGTH = 25;
 
