@@ -6,34 +6,28 @@ type Result = {
     nOverlaps: number;
 };
 
-const boardSize = 10;
+type Orientation = "horizontal" | "vertical";
 
-let countries: CountryElement[] = [
+type ResultWithPosition = { ok: false }
+    | Result & {
+        startRowIndex: number;
+        startColIndex: number;
+        orientation: Orientation;
+    }
+
+type Position =
     {
-        name: {
-            common: "CANADA"
-        },
-        cca2: "CA"
-    },
-    {
-        name: {
-            common: "BRAZIL"
-        },
-        cca2: "BR"
-    },
-    {
-        name: {
-            common: "JAPAN"
-        },
-        cca2: "JP"
-    },
-    {
-        name: {
-            common: "AUSTRALIA"
-        },
-        cca2: "AU"
-    },
-]
+        [key: string]: {
+            rowIndex: number,
+            colIndex: number,
+            orientation: Orientation
+        }
+    }
+
+type ResultBoard = {
+    board: string[][],
+    positions: Position[]
+}
 
 function inBounds(rowIndex: number, colIndex: number, boardSize: number): boolean {
     return rowIndex >= 0 && rowIndex < boardSize && colIndex >= 0 && colIndex < boardSize;
@@ -110,14 +104,14 @@ function checkVertical(rowIndex: number, colIndex: number, board: string[][], wo
     return { ok: true, board, nOverlaps };
 }
 
-function placeFirstWord({ name: { common } }: CountryElement, board: string[][]): boolean {
-    if (common.length > boardSize) {
+function placeFirstWord({ name: { common } }: CountryElement, board: string[][]): ResultWithPosition {
+    if (common.length > board.length) {
         console.log("Word is too long");
-        return false;
+        return { ok: false };
     }
 
-    const middleRow = boardSize / 2;
-    const startCol = Math.floor((boardSize - common.length) / 2);
+    const middleRow = board.length / 2;
+    const startCol = Math.floor((board.length - common.length) / 2);
 
     [...common].forEach((char, i) => {
         if (board[middleRow]) {
@@ -127,19 +121,23 @@ function placeFirstWord({ name: { common } }: CountryElement, board: string[][])
 
     console.log("Placed first word in the middle: " + common);
 
-    return true;
+    return { ok: true, board, startRowIndex: middleRow, startColIndex: startCol, orientation: "horizontal", nOverlaps: 0 };
 }
 
-function placeWord({ name: { common } }: CountryElement, board: string[][], nPlacedWords: number): Result {
-    if (common.length > boardSize) {
+function placeWord({ name: { common } }: CountryElement, board: string[][], nPlacedWords: number): ResultWithPosition {
+    if (common.length > board.length) {
         console.log("Word is too long");
-        return { ok: false, board, nOverlaps: 0 };
+        return { ok: false };
     }
 
-    const maxStart = boardSize - common.length;
+    const maxStart = board.length - common.length;
     let bestOverlap = -1 // TODO Why -1
     let bestBoard: string[][];
     let placementFound = false;
+
+    let startRowIndex = 0;
+    let startColIndex = 0;
+    let orientation: Orientation = "horizontal";
 
     for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
         for (let colIndex = 0; colIndex <= maxStart; colIndex++) {
@@ -150,9 +148,11 @@ function placeWord({ name: { common } }: CountryElement, board: string[][], nPla
             if (isPlacementFound(result, bestOverlap)) {
                 bestOverlap = result.nOverlaps;
                 bestBoard = result.board;
+                startRowIndex = rowIndex;
+                startColIndex = colIndex;
+                orientation = "horizontal";
                 placementFound = true;
             }
-
         }
     }
 
@@ -165,35 +165,32 @@ function placeWord({ name: { common } }: CountryElement, board: string[][], nPla
             if (isPlacementFound(result, bestOverlap)) {
                 bestOverlap = result.nOverlaps;
                 bestBoard = result.board;
+                startRowIndex = rowIndex;
+                startColIndex = colIndex;
+                orientation = "vertical";
                 placementFound = true;
             }
-
         }
     }
 
-    if (placementFound) {
-        return { ok: true, board: bestBoard!, nOverlaps: bestOverlap };
-
-    } else {
-        return { ok: false, board: bestBoard!, nOverlaps: bestOverlap };
-
-    }
+    return { ok: placementFound, board: bestBoard!, startRowIndex, startColIndex, orientation, nOverlaps: bestOverlap };
 }
 
-export function Generate(words: CountryElement[] = countries, boardSize: number = 10) {
+export function Generate(words: CountryElement[], boardSize: number = 10): ResultBoard | false {
     const emptyCell = '#';
     let board = Array.from({ length: boardSize }, () =>
         Array.from({ length: boardSize }, () => emptyCell)
     );
+    let positions: Position[] = [];
 
     const sortedWords = sortWords(words);
     const [firstWord] = sortedWords;
 
-    if (!firstWord) return;
+    if (!firstWord) return false;
 
     placeFirstWord(firstWord, board);
 
-    let nPlacedWords = 1;
+    let nPlacedWords = 1; // TODO Unused, for debug purposes
 
     words.slice(nPlacedWords).forEach((word) => {
         let result = placeWord(word, board, nPlacedWords);
@@ -201,6 +198,13 @@ export function Generate(words: CountryElement[] = countries, boardSize: number 
         if (result.ok) {
             board = result.board;
             nPlacedWords++;
+            positions.push({
+                "#{word.cca2}": {
+                    rowIndex: result.startRowIndex,
+                    colIndex: result.startColIndex,
+                    orientation: result.orientation
+                }
+            })
 
             console.log("Placed word " + word.name.common + " with overlap " + result.nOverlaps);
 
@@ -209,5 +213,8 @@ export function Generate(words: CountryElement[] = countries, boardSize: number 
         }
     })
 
-    return board;
+    return {
+        board,
+        positions
+    };
 }

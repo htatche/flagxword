@@ -3,6 +3,7 @@ import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
 import { Generate } from './Crossword'
+import type { CountryElement } from './Types';
 
 type CellLetter = string | null;
 
