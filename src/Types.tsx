@@ -4,3 +4,5 @@ export type CountryElement = {
   };
   cca2: string;
 };
+
+export type CellLetter = string | null;

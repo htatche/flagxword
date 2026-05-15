@@ -3,9 +3,7 @@ import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
 import { Generate } from './Crossword'
-import type { CountryElement } from './Types';
-
-type CellLetter = string | null;
+import type { CountryElement, CellLetter } from './Types';
 
 interface BoardProps {
     boardSize: number;
@@ -16,19 +14,7 @@ export function Board({ boardSize }: BoardProps) {
     const randomLetters = Array.from({ length: 10 }, () =>
         alphabet[Math.floor(Math.random() * alphabet.length)]!
     );
-    type CellLetter = string | null;
     type Tile = { id: string; letter: string };
-
-    const [cells, setCells] = useState<CellLetter[]>(
-        () => Array(boardSize * boardSize).fill(null)
-    );
-
-    const [rack, setRack] = useState<Tile[]>(() =>
-        randomLetters.map((letter, i) => ({
-            id: `tile-${i}-${crypto.randomUUID()}`,
-            letter: letter,
-        }))
-    );
 
     let countries: CountryElement[] = [
         {
@@ -57,10 +43,27 @@ export function Board({ boardSize }: BoardProps) {
         },
     ]
 
-    let result = Generate(countries, boardSize - 1);
-    if (result) {
-        console.table(result.board);
-    }
+    let result = Generate(countries, boardSize);
+
+    const [rows, setRows] = useState<CellLetter[][]>(
+        () => {
+            if (result) {
+                console.table(result.board);
+                return result.board;
+            } else {
+                return Array.from({ length: boardSize }, () =>
+                    Array.from({ length: boardSize }, () => "")
+                );
+            }
+        }
+    );
+
+    const [rack, setRack] = useState<Tile[]>(() =>
+        randomLetters.map((letter, i) => ({
+            id: `tile-${i}-${crypto.randomUUID()}`,
+            letter: letter,
+        }))
+    );
 
     return (
         <DragDropProvider
@@ -79,13 +82,12 @@ export function Board({ boardSize }: BoardProps) {
                 const tile = rack.find((t) => t.id === sourceId);
                 if (!tile) return;
 
-                // Use hooks
                 setRack((prev) => prev.filter((t) => t.id !== sourceId));
-                setCells((prevCells) => {
-                    const newCells = [...prevCells];
-                    newCells[cellIndex] = tile.letter;
-                    return newCells;
-                });
+                // setRows((prevCells) => {
+                //     const newCells = [...prevCells];
+                //     newCells[cellIndex] = tile.letter;
+                //     return newCells;
+                // });
             }}
         >
 
@@ -99,11 +101,15 @@ export function Board({ boardSize }: BoardProps) {
                 }}
             >
 
-                {cells.map((letter, i) => (
-                    <DroppableBox key={i} id={`cell-${i}`}>
-                        {letter ?? ""}
-                    </DroppableBox>
-                ))}
+                {
+                    rows.map((column, i) => (
+                        column.map((letter, i) => (
+                            <DroppableBox key={i} id={`cell-${i}`}>
+                                {letter ?? ""}
+                            </DroppableBox>
+                        ))
+                    ))
+                }
             </div>
         </DragDropProvider>
     );

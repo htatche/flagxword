@@ -22,7 +22,7 @@ export function App() {
 
     return (
         <main className="app-shell">
-            <Board boardSize={10} />
+            <Board boardSize={11} />
         </main>
     )
 }
