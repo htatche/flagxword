@@ -3,60 +3,48 @@ import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
 import { Generate } from './Crossword'
-import type { CountryElement, CellLetter } from './Types';
+import type { CountryElement } from './Types';
 
 interface BoardProps {
     boardSize: number;
+    countries: CountryElement[]
 }
 
-export function Board({ boardSize }: BoardProps) {
+type Cell =
+    |   {
+            letter: string,
+            fulfilled: boolean,
+            enabled: boolean
+        } 
+
+export function Board({ boardSize, countries }: BoardProps) {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
     const randomLetters = Array.from({ length: 10 }, () =>
         alphabet[Math.floor(Math.random() * alphabet.length)]!
     );
     type Tile = { id: string; letter: string };
 
-    let countries: CountryElement[] = [
-        {
-            name: {
-                common: "CANADA"
-            },
-            cca2: "CA"
-        },
-        {
-            name: {
-                common: "BRAZIL"
-            },
-            cca2: "BR"
-        },
-        {
-            name: {
-                common: "JAPAN"
-            },
-            cca2: "JP"
-        },
-        {
-            name: {
-                common: "AUSTRALIA"
-            },
-            cca2: "AU"
-        },
-    ]
+    const [rows, setRows] = useState<Cell[][]>([]);
 
-    let result = Generate(countries, boardSize);
+useEffect(() => {
+        let result = Generate(countries, boardSize);
 
-    const [rows, setRows] = useState<CellLetter[][]>(
-        () => {
-            if (result) {
-                console.table(result.board);
-                return result.board;
-            } else {
-                return Array.from({ length: boardSize }, () =>
-                    Array.from({ length: boardSize }, () => "")
-                );
-            }
-        }
-    );
+        if (!result) return;
+
+        let board: Cell[][] = result.board.map((column) => {
+            return column.map((letter) => {
+                if (letter == "#") {
+                    return { letter: letter, fulfilled: false, enabled: false };
+
+                } else {
+                    return { letter: letter, fulfilled: false, enabled: true };
+                }
+            })
+        })
+
+        setRows(board);
+
+    }, []);
 
     const [rack, setRack] = useState<Tile[]>(() =>
         randomLetters.map((letter, i) => ({
@@ -73,21 +61,28 @@ export function Board({ boardSize }: BoardProps) {
                 const targetId = String(event.operation.target?.id ?? "");
                 const sourceId = String(event.operation.source?.id ?? "");
 
-                if (!targetId.startsWith("cell-")) return;
-                const cellIndex = Number(targetId.replace("cell-", ""));
-                if (Number.isNaN(cellIndex)) return;
+                const [, rowIndexText, colIndexText] = targetId.split("-");
+                const rowIndex = Number(rowIndexText);
+                const colIndex = Number(colIndexText);
 
-                console.log(event.operation.target);
+                if (Number.isNaN(rowIndex) || Number.isNaN(colIndex)) return;
 
                 const tile = rack.find((t) => t.id === sourceId);
                 if (!tile) return;
 
                 setRack((prev) => prev.filter((t) => t.id !== sourceId));
-                // setRows((prevCells) => {
-                //     const newCells = [...prevCells];
-                //     newCells[cellIndex] = tile.letter;
-                //     return newCells;
-                // });
+                setRows((prevRows) => {
+                    const newRows = [...prevRows];
+                    const row = newRows[rowIndex];
+
+                    if (!row) return prevRows;
+
+                    row[colIndex] = {
+                       letter: tile.letter, fulfilled: true, enabled: true 
+                    }
+
+                    return newRows;
+                });
             }}
         >
 
@@ -103,9 +98,9 @@ export function Board({ boardSize }: BoardProps) {
 
                 {
                     rows.map((column, i) => (
-                        column.map((letter, i) => (
-                            <DroppableBox key={i} id={`cell-${i}`}>
-                                {letter ?? ""}
+                        column.map((cell, j) => (
+                            <DroppableBox key={`${i}-${j}`} id={`cell-${i}-${j}`} enabled={cell.enabled} fulfilled={cell.fulfilled}>
+                                {cell.letter}
                             </DroppableBox>
                         ))
                     ))
