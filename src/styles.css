@@ -1,3 +1,4 @@
+/* Reset */
 *,
 *::before,
 *::after {
@@ -6,66 +7,142 @@
 
 html,
 body {
+  block-size: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
+:root {
+  --page-background: radial-gradient(circle at center, hsl(64 92% 90%), hsl(0 0% 100%));
+  --surface-color: white;
+  --text-color: black;
+  --tile-border-color: gray;
+  --surface-radius: 0.75rem;
+  --surface-shadow: 0 10px 30px hsl(215 30% 15% / 0.08);
+  --tile-font-size: clamp(0.75rem, 5vmin, 2.75rem);
+}
+
+/* Base page */
 body {
-  min-height: 100svh;
+  min-block-size: 100svh;
+
   font-family: "Inter", "Segoe UI", sans-serif;
-  background: radial-gradient(circle at center, hsl(64 92% 90%), hsl(0 0% 100%));
+
+  background: var(--page-background);
 }
 
-.app-shell {
-  height: auto;
-  min-height: 100vh;
-  /*min-height: 100svh;*/
+#root {
+  display: grid;
   place-items: center;
-  padding: 2rem;
+
+  inline-size: 100%;
+  block-size: 100%;
+
+  overflow: hidden;
+}
+
+/* App layout */
+.app-shell {
+  --shell-padding: clamp(0.5rem, 2vmin, 1.25rem);
+  --layout-gap: clamp(0.5rem, 2vmin, 1rem);
+  --available-block-size: calc(
+    90svh - var(--shell-padding) - var(--shell-padding) - var(--layout-gap)
+  );
+
+  /* The rack is one fifth as tall as the board, so the board gets 5/6 of the available height. */
+  --board-length: min(
+    calc(90vw - var(--shell-padding) - var(--shell-padding)),
+    calc(var(--available-block-size) / 1.2)
+  );
+
+  /* Five columns by two rows keeps the draggable letters square. */
+  --rack-length: min(
+    calc(var(--board-length) / 2),
+    calc(90vw - var(--shell-padding) - var(--shell-padding))
+  );
+
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-items: center;
+  align-content: start;
+  gap: var(--layout-gap);
+
+  inline-size: 90vw;
+  block-size: 90svh;
+
+  padding: var(--shell-padding);
+  overflow: hidden;
 }
 
 .board {
-  width: 95%;
-  aspect-ratio: 1;
   display: grid;
-  padding: clamp(0.4rem, 1.25vmin, 1rem);
-  /*overflow: hidden;*/
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 30px hsl(215 30% 15% / 0.08);
-  background: white;
+
+  inline-size: var(--board-length);
+  max-inline-size: 100%;
+  aspect-ratio: 1;
+
+  overflow: hidden;
+
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+
+  background: var(--surface-color);
 }
 
-button {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  background: white;
-  color: black;
-  font: inherit;
-  font-size: clamp(0.75rem, 4.5vmin, 2.75rem);
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
+.draggable-letters {
+  display: grid;
+
+  inline-size: var(--rack-length);
+  max-inline-size: 100%;
+  aspect-ratio: 5 / 2;
+
+  overflow: hidden;
+
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+
+  background: var(--surface-color);
 }
 
 .droppable-box {
   display: grid;
   place-items: center;
-  border: 1px solid gray;
+
+  /* Square tiles */
+  aspect-ratio: 1;
+
+  border: 1px solid var(--tile-border-color);
   padding: 0;
-  background: white;
-  color: black;
-  line-height: normal;
+  overflow: hidden;
+
+  background: var(--surface-color);
+  color: var(--text-color);
+
+  line-height: 1;
+}
+
+.draggable-letters button {
+  inline-size: 100%;
+  block-size: 100%;
+  aspect-ratio: 1;
+
+  padding: 0;
+  border: 1px solid var(--tile-border-color);
+
+  background: var(--surface-color);
+  color: var(--text-color);
+
+  font: inherit;
+  font-size: var(--tile-font-size);
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
 }
 
 .cell-letter {
-  font-size: 4vmin;
-}
+  font-size: var(--tile-font-size);
 
-.draggable-letters {
-  width: 95%;
-  display: grid;
-  overflow: hidden;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 30px hsl(215 30% 15% / 0.08);
-  background: white;
+  line-height: 1;
 }
