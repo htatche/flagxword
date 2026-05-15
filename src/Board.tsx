@@ -7,11 +7,10 @@ import { Generate } from './Crossword'
 type CellLetter = string | null;
 
 interface BoardProps {
-    size: number;
+    boardSize: number;
 }
 
-export function Board({ size }: BoardProps) {
-    const BOARD_SIZE = 15
+export function Board({ boardSize }: BoardProps) {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
     const randomLetters = Array.from({ length: 10 }, () =>
         alphabet[Math.floor(Math.random() * alphabet.length)]!
@@ -20,7 +19,7 @@ export function Board({ size }: BoardProps) {
     type Tile = { id: string; letter: string };
 
     const [cells, setCells] = useState<CellLetter[]>(
-        () => Array(BOARD_SIZE * BOARD_SIZE).fill(null)
+        () => Array(boardSize * boardSize).fill(null)
     );
 
     const [rack, setRack] = useState<Tile[]>(() =>
@@ -30,8 +29,37 @@ export function Board({ size }: BoardProps) {
         }))
     );
 
-    let result = Generate();
-    console.table(result);
+    let countries: CountryElement[] = [
+        {
+            name: {
+                common: "CANADA"
+            },
+            cca2: "CA"
+        },
+        {
+            name: {
+                common: "BRAZIL"
+            },
+            cca2: "BR"
+        },
+        {
+            name: {
+                common: "JAPAN"
+            },
+            cca2: "JP"
+        },
+        {
+            name: {
+                common: "AUSTRALIA"
+            },
+            cca2: "AU"
+        },
+    ]
+
+    let result = Generate(countries, boardSize - 1);
+    if (result) {
+        console.table(result.board);
+    }
 
     return (
         <DragDropProvider
@@ -65,8 +93,8 @@ export function Board({ size }: BoardProps) {
             <div
                 className="board"
                 style={{
-                    gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-                    gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${boardSize}, minmax(0, 1fr))`,
                 }}
             >
 
