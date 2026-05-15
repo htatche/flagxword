@@ -11,11 +11,11 @@ interface BoardProps {
 }
 
 type Cell =
-    |   {
-            letter: string,
-            fulfilled: boolean,
-            enabled: boolean
-        } 
+    | {
+        letter: string,
+        fulfilled: boolean,
+        enabled: boolean
+    }
 
 export function Board({ boardSize, countries }: BoardProps) {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
@@ -26,7 +26,7 @@ export function Board({ boardSize, countries }: BoardProps) {
 
     const [rows, setRows] = useState<Cell[][]>([]);
 
-useEffect(() => {
+    useEffect(() => {
         let result = Generate(countries, boardSize);
 
         if (!result) return;
@@ -78,7 +78,7 @@ useEffect(() => {
                     if (!row) return prevRows;
 
                     row[colIndex] = {
-                       letter: tile.letter, fulfilled: true, enabled: true 
+                        letter: tile.letter, fulfilled: true, enabled: true
                     }
 
                     return newRows;
