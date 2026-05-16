@@ -13,13 +13,18 @@ body {
 }
 
 :root {
-  --page-background: radial-gradient(circle at center, hsl(64 92% 90%), hsl(0 0% 100%));
-  --surface-color: white;
+  --page-background: radial-gradient(
+    circle at center,
+    hsl(0, 0%, 100%),
+    hsl(0, 0%, 95%)
+  );
+  --surface-color: rgb(255, 255, 255);
   --text-color: black;
   --tile-border-color: gray;
   --surface-radius: 0.75rem;
   --surface-shadow: 0 10px 30px hsl(215 30% 15% / 0.08);
   --tile-font-size: clamp(0.75rem, 5vmin, 2.75rem);
+  --rack-font-size: clamp(0.875rem, 3vmin, 1.75rem);
 }
 
 /* Base page */
@@ -57,7 +62,7 @@ body {
 
   /* Five columns by two rows keeps the draggable letters square. */
   --rack-length: min(
-    calc(var(--board-length) / 2),
+    calc(var(--board-length) / 3),
     calc(90vw - var(--shell-padding) - var(--shell-padding))
   );
 
@@ -77,18 +82,13 @@ body {
 
 .board {
   display: grid;
-  gap: 1px;
+  gap: 5px;
 
   inline-size: var(--board-length);
   max-inline-size: 100%;
   aspect-ratio: 1;
 
   overflow: hidden;
-
-  border-radius: var(--surface-radius);
-  box-shadow: var(--surface-shadow);
-
-  background: var(--tile-border-color);
 }
 
 .draggable-letters {
@@ -114,7 +114,8 @@ body {
   /* Square tiles */
   aspect-ratio: 1;
 
-  border: 0;
+  border: 2px solid rgb(183, 183, 183);
+  border-radius: 6px;
   padding: 0;
   overflow: hidden;
 
@@ -122,6 +123,23 @@ body {
   color: var(--text-color);
 
   line-height: 1;
+}
+
+.droppable-box.flag {
+  border: none;
+  background: transparent;
+}
+
+.droppable-box.flag img {
+  display: block;
+  inline-size: 76%;
+  block-size: 58%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.invisible-box {
+  background: inherit;
 }
 
 .draggable-letters button {
@@ -136,7 +154,7 @@ body {
   color: var(--text-color);
 
   font: inherit;
-  font-size: var(--tile-font-size);
+  font-size: var(--rack-font-size);
   font-weight: 700;
   line-height: 1;
 
