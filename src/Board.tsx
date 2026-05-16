@@ -1,21 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
 import { Generate } from './Crossword'
-import type { CountryElement } from './Types';
+import type { CountryElement, Cell } from './Types';
 
 interface BoardProps {
     boardSize: number;
     countries: CountryElement[]
 }
 
-type Cell =
-    | {
-        letter: string,
-        fulfilled: boolean,
-        enabled: boolean
-    }
+function placeFlag(
+    rows: Cell[][],
+    rowIndex: number,
+    colIndex: number,
+    country: CountryElement,
+) {
+    const row = rows[rowIndex];
+
+    if (!row?.[colIndex] || !country.img) return;
+
+    row[colIndex] = {
+        letter: "",
+        img: {
+            src: country.img,
+            alt: `${country.name.common} flag`,
+        },
+        fulfilled: true,
+        enabled: true,
+    };
+}
 
 export function Board({ boardSize, countries }: BoardProps) {
     const alphabet = "abcdefghijklmnopqrstuvwxyz";
@@ -27,24 +41,38 @@ export function Board({ boardSize, countries }: BoardProps) {
     const [rows, setRows] = useState<Cell[][]>([]);
 
     useEffect(() => {
-        let result = Generate(countries, boardSize);
+        const result = Generate(countries, boardSize);
 
         if (!result) return;
 
-        let board: Cell[][] = result.board.map((column) => {
-            return column.map((letter) => {
+        const rows: Cell[][] = result.board.map((row) => {
+            return row.map((letter) => {
                 if (letter == "#") {
                     return { letter: letter, fulfilled: false, enabled: false };
-
                 } else {
                     return { letter: letter, fulfilled: false, enabled: true };
                 }
             })
         })
 
-        setRows(board);
+        const countriesByCode = new Map(
+            countries.map((country) => [country.cca2, country])
+        );
 
-    }, []);
+        result.positions.forEach((position) => {
+            const country = countriesByCode.get(position.cca2);
+
+            if (!country) return;
+
+            if (position.orientation === "horizontal") {
+                placeFlag(rows, position.rowIndex, position.colIndex - 1, country);
+            } else {
+                placeFlag(rows, position.rowIndex - 1, position.colIndex, country);
+            }
+        });
+
+        setRows(rows);
+    }, [boardSize, countries]);
 
     const [rack, setRack] = useState<Tile[]>(() =>
         randomLetters.map((letter, i) => ({
@@ -99,7 +127,13 @@ export function Board({ boardSize, countries }: BoardProps) {
                 {
                     rows.map((column, i) => (
                         column.map((cell, j) => (
-                            <DroppableBox key={`${i}-${j}`} id={`cell-${i}-${j}`} enabled={cell.enabled} fulfilled={cell.fulfilled}>
+                            <DroppableBox
+                                key={`${i}-${j}`}
+                                id={`cell-${i}-${j}`}
+                                enabled={cell.enabled}
+                                fulfilled={cell.fulfilled}
+                                flag={cell.img}
+                            >
                                 {cell.letter}
                             </DroppableBox>
                         ))
