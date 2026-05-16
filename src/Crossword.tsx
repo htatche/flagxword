@@ -28,7 +28,7 @@ type ResultBoard = {
     positions: Position[]
 }
 
-const RESERVED_BORDER = 0; // Reserved for flags TODO: FIX 
+const RESERVED_BORDER = 1; // Reserved for flags 
 
 function inBounds(rowIndex: number, colIndex: number, boardSize: number): boolean {
     return rowIndex >= 0 && rowIndex < boardSize && colIndex >= 0 && colIndex < boardSize;
