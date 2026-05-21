@@ -23,7 +23,7 @@ type Position =
         orientation: Orientation
     }
 
-type ResultBoard = {
+export type ResultBoard = {
     board: string[][],
     positions: Position[]
 }

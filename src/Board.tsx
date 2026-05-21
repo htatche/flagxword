@@ -3,6 +3,7 @@ import { DroppableBox } from './DroppableBox';
 import { DragDropProvider } from "@dnd-kit/react";
 import { AvailableLetters } from './AvailableLetters'
 import { Generate } from './Crossword'
+import type { ResultBoard } from './Crossword'
 import type { CountryElement, Cell } from './Types';
 
 interface BoardProps {
@@ -32,20 +33,18 @@ function placeFlag(
 }
 
 export function Board({ boardSize, countries }: BoardProps) {
-    const alphabet = "abcdefghijklmnopqrstuvwxyz";
-    const randomLetters = Array.from({ length: 10 }, () =>
-        alphabet[Math.floor(Math.random() * alphabet.length)]!
-    );
-    type Tile = { id: string; letter: string };
+    type Tile = { id: string; letter: string }; 1
 
-    const [rows, setRows] = useState<Cell[][]>([]);
+    const [rows, setBoard] = useState<Cell[][]>([]);
+    const [rack, setRack] = useState<Tile[]>([]);
+    const [generatedCrossword, setGeneratedCrossword] = useState<ResultBoard | false>();
 
-    useEffect(() => {
-        const result = Generate(countries, boardSize);
+    function generateBoard() {
+        const crossword = Generate(countries, boardSize);
 
-        if (!result) return;
+        if (!crossword) return;
 
-        const rows: Cell[][] = result.board.map((row) => {
+        const rows: Cell[][] = crossword.board.map((row) => {
             return row.map((letter) => {
                 if (letter == "#") {
                     return { letter: letter, fulfilled: false, enabled: false };
@@ -59,7 +58,7 @@ export function Board({ boardSize, countries }: BoardProps) {
             countries.map((country) => [country.cca2, country])
         );
 
-        result.positions.forEach((position) => {
+        crossword.positions.forEach((position) => {
             const country = countriesByCode.get(position.cca2);
 
             if (!country) return;
@@ -71,15 +70,53 @@ export function Board({ boardSize, countries }: BoardProps) {
             }
         });
 
-        setRows(rows);
-    }, [boardSize, countries]);
+        setBoard(rows);
+        setGeneratedCrossword(crossword);
+    }
 
-    const [rack, setRack] = useState<Tile[]>(() =>
-        randomLetters.map((letter, i) => ({
+    function shuffle<T>(arr: T[]): T[] {
+        const copy = [...arr]
+
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [copy[i], copy[j]] = [copy[j]!, copy[i]!]
+        }
+
+        return copy
+    }
+
+    function setupAvailableLetters() {
+        if (!generatedCrossword) return;
+        if (countries.length === 0) return;
+
+        const availableCountries = countries.filter((country) => {
+            return generatedCrossword.positions.find((position) => {
+                return position.cca2 == country.cca2
+            });
+        });
+        const allLetters = availableCountries.reduce<string[]>((allLetters, country) => {
+            allLetters.push(...country.name.common.split(""));
+
+            return allLetters;
+        }, []);
+        const randomLetters = shuffle(allLetters);
+
+        const rack = randomLetters.map((letter, i) => ({
             id: `tile-${i}-${crypto.randomUUID()}`,
             letter: letter,
         }))
-    );
+
+        setRack(rack);
+    }
+
+    useEffect(() => {
+        setupAvailableLetters();
+    }, [generatedCrossword, countries]);
+
+    useEffect(() => {
+        generateBoard();
+    }, [boardSize, countries]); // TOIDO remove boarsize?
 
     return (
         <DragDropProvider
@@ -98,16 +135,19 @@ export function Board({ boardSize, countries }: BoardProps) {
                 const tile = rack.find((t) => t.id === sourceId);
                 if (!tile) return;
 
-                setRack((prev) => prev.filter((t) => t.id !== sourceId));
-                setRows((prevRows) => {
+                setBoard((prevRows) => {
                     const newRows = [...prevRows];
                     const row = newRows[rowIndex];
 
-                    if (!row) return prevRows;
+                    if (!row?.[colIndex]) return prevRows;
+
+                    if (tile.letter != row[colIndex].letter) return prevRows;
 
                     row[colIndex] = {
                         letter: tile.letter, fulfilled: true, enabled: true
                     }
+
+                    setRack((prev) => prev.filter((t) => t.id !== sourceId));
 
                     return newRows;
                 });
