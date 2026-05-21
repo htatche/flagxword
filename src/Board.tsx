@@ -12,16 +12,16 @@ interface BoardProps {
 }
 
 function placeFlag(
-    rows: Cell[][],
+    board: Cell[][],
     rowIndex: number,
     colIndex: number,
     country: CountryElement,
 ) {
-    const row = rows[rowIndex];
+    const columns = board[rowIndex];
 
-    if (!row?.[colIndex] || !country.img) return;
+    if (!columns?.[colIndex] || !country.img) return;
 
-    row[colIndex] = {
+    columns[colIndex] = {
         letter: "",
         img: {
             src: country.img,
@@ -35,7 +35,7 @@ function placeFlag(
 export function Board({ boardSize, countries }: BoardProps) {
     type Tile = { id: string; letter: string }; 1
 
-    const [rows, setBoard] = useState<Cell[][]>([]);
+    const [board, setBoard] = useState<Cell[][]>([]);
     const [rack, setRack] = useState<Tile[]>([]);
     const [generatedCrossword, setGeneratedCrossword] = useState<ResultBoard | false>();
 
@@ -44,8 +44,8 @@ export function Board({ boardSize, countries }: BoardProps) {
 
         if (!crossword) return;
 
-        const rows: Cell[][] = crossword.board.map((row) => {
-            return row.map((letter) => {
+        const board: Cell[][] = crossword.board.map((columns) => {
+            return columns.map((letter) => {
                 if (letter == "#") {
                     return { letter: letter, fulfilled: false, enabled: false };
                 } else {
@@ -64,13 +64,13 @@ export function Board({ boardSize, countries }: BoardProps) {
             if (!country) return;
 
             if (position.orientation === "horizontal") {
-                placeFlag(rows, position.rowIndex, position.colIndex - 1, country);
+                placeFlag(board, position.rowIndex, position.colIndex - 1, country);
             } else {
-                placeFlag(rows, position.rowIndex - 1, position.colIndex, country);
+                placeFlag(board, position.rowIndex - 1, position.colIndex, country);
             }
         });
 
-        setBoard(rows);
+        setBoard(board);
         setGeneratedCrossword(crossword);
     }
 
@@ -135,21 +135,21 @@ export function Board({ boardSize, countries }: BoardProps) {
                 const tile = rack.find((t) => t.id === sourceId);
                 if (!tile) return;
 
-                setBoard((prevRows) => {
-                    const newRows = [...prevRows];
-                    const row = newRows[rowIndex];
+                setBoard((prevBoard) => {
+                    const newBoard = [...prevBoard];
+                    const columns = newBoard[rowIndex];
 
-                    if (!row?.[colIndex]) return prevRows;
+                    if (!columns?.[colIndex]) return prevBoard;
 
-                    if (tile.letter != row[colIndex].letter) return prevRows;
+                    if (tile.letter != columns[colIndex].letter) return prevBoard;
 
-                    row[colIndex] = {
+                    columns[colIndex] = {
                         letter: tile.letter, fulfilled: true, enabled: true
                     }
 
                     setRack((prev) => prev.filter((t) => t.id !== sourceId));
 
-                    return newRows;
+                    return newBoard;
                 });
             }}
         >
@@ -165,7 +165,7 @@ export function Board({ boardSize, countries }: BoardProps) {
             >
 
                 {
-                    rows.map((column, i) => (
+                    board.map((column, i) => (
                         column.map((cell, j) => (
                             <DroppableBox
                                 key={`${i}-${j}`}
