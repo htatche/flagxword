@@ -14,9 +14,15 @@ export function App() {
 
             if (list.length === 0) return;
 
-            const countriesSet = Array.from({ length: 5 }, () =>
-                list[Math.floor(Math.random() * list.length)]!
-            );
+            const countriesSet: CountryElement[] = [];
+
+            while (countriesSet.length < 5) {
+                const country = list[Math.floor(Math.random() * list.length)]!;
+
+                if (!countriesSet.includes(country)) {
+                    countriesSet.push(country);
+                }
+            }
 
             countriesSet.map((country) => {
                 country.name.common = country.name.common.toUpperCase();
