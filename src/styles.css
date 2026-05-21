@@ -142,7 +142,8 @@ body {
   background: inherit;
 }
 
-.draggable-letters button {
+.draggable-letters button,
+.rack-placeholder {
   inline-size: 100%;
   block-size: 100%;
   aspect-ratio: 1;
@@ -152,7 +153,9 @@ body {
 
   background: var(--surface-color);
   color: var(--text-color);
+}
 
+.draggable-letters button {
   font: inherit;
   font-size: var(--rack-font-size);
   font-weight: 700;

@@ -1,8 +1,10 @@
 import {DraggableLetter} from './DraggableLetter';
+
 type Tile = { id: string; letter: string };
+type RackSlot = Tile | null;
 
 interface AvailableLettersProps {
-    letters: Tile[];
+    letters: RackSlot[];
 }
 
 export function AvailableLetters({letters}: AvailableLettersProps) {
@@ -14,13 +16,19 @@ export function AvailableLetters({letters}: AvailableLettersProps) {
                 gridTemplateRows: `repeat(2, minmax(0, 1fr))`,
             }}
         >
-            {letters.map((letter) => (
-                <DraggableLetter
-                    key={letter.id}
-                    id={letter.id}
-                    letter={letter.letter}
-                />
-            ))}
+            {letters.map((letter, index) => {
+                if (!letter) {
+                    return <div key={`empty-${index}`} className="rack-placeholder" />;
+                }
+
+                return (
+                    <DraggableLetter
+                        key={letter.id}
+                        id={letter.id}
+                        letter={letter.letter}
+                    />
+                );
+            })}
         </div>
     );
 }

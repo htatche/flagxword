@@ -33,10 +33,14 @@ function placeFlag(
 }
 
 export function Board({ boardSize, countries }: BoardProps) {
-    type Tile = { id: string; letter: string }; 1
+    type Tile = { id: string; letter: string };
+    type RackSlot = Tile | null;
+
+    const rackSize = 10;
 
     const [board, setBoard] = useState<Cell[][]>([]);
-    const [rack, setRack] = useState<Tile[]>([]);
+    const [rack, setRack] = useState<RackSlot[]>([]);
+    const [letterPool, setLetterPool] = useState<Tile[]>([]);
     const [generatedCrossword, setGeneratedCrossword] = useState<ResultBoard | false>();
 
     function generateBoard() {
@@ -90,24 +94,30 @@ export function Board({ boardSize, countries }: BoardProps) {
         if (!generatedCrossword) return;
         if (countries.length === 0) return;
 
-        const availableCountries = countries.filter((country) => {
-            return generatedCrossword.positions.find((position) => {
-                return position.cca2 == country.cca2
+        const allLetters = generatedCrossword.board.reduce<string[]>((allLetters, columns) => {
+            columns.forEach((letter) => {
+                if (letter !== "#") {
+                    allLetters.push(letter);
+                }
             });
-        });
-        const allLetters = availableCountries.reduce<string[]>((allLetters, country) => {
-            allLetters.push(...country.name.common.split(""));
 
             return allLetters;
         }, []);
         const randomLetters = shuffle(allLetters);
 
-        const rack = randomLetters.map((letter, i) => ({
+        const letters = randomLetters.map((letter, i) => ({
             id: `tile-${i}-${crypto.randomUUID()}`,
             letter: letter,
         }))
 
-        setRack(rack);
+        const initialRack: RackSlot[] = letters.slice(0, rackSize);
+
+        while (initialRack.length < rackSize) {
+            initialRack.push(null);
+        }
+
+        setRack(initialRack);
+        setLetterPool(letters.slice(rackSize));
     }
 
     useEffect(() => {
@@ -132,7 +142,7 @@ export function Board({ boardSize, countries }: BoardProps) {
 
                 if (Number.isNaN(rowIndex) || Number.isNaN(colIndex)) return;
 
-                const tile = rack.find((t) => t.id === sourceId);
+                const tile = rack.find((t) => t?.id === sourceId);
                 if (!tile) return;
 
                 setBoard((prevBoard) => {
@@ -147,7 +157,16 @@ export function Board({ boardSize, countries }: BoardProps) {
                         letter: tile.letter, fulfilled: true, enabled: true
                     }
 
-                    setRack((prev) => prev.filter((t) => t.id !== sourceId));
+                    const [nextLetter, ...remainingLetters] = letterPool;
+
+                    setRack((prevRack) => {
+                        return prevRack.map((letter) => {
+                            if (letter?.id !== sourceId) return letter;
+
+                            return nextLetter ?? null;
+                        });
+                    });
+                    setLetterPool(remainingLetters);
 
                     return newBoard;
                 });
